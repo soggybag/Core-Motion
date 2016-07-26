@@ -7,39 +7,66 @@
 //
 
 import SpriteKit
+import CoreMotion
 
 class GameScene: SKScene {
+    
+    let motionUpdateInterval = 0.2
+    
+    let motionManager = CMMotionManager()
+    var acceleration = CGVector()
+    
+    var box: SKSpriteNode!
+    
+    
+    
+    func setupCoreMotion() {
+        motionManager.accelerometerUpdateInterval = motionUpdateInterval
+        let queue = NSOperationQueue()
+        motionManager.startAccelerometerUpdatesToQueue(queue) { (accelerometerData, error) in
+            guard let accelerometerData = accelerometerData else {
+                return
+            }
+            
+            let accelX = accelerometerData.acceleration.x
+            let accelY = accelerometerData.acceleration.y
+            let accelZ = accelerometerData.acceleration.z
+            
+            self.acceleration = CGVector(dx: accelX, dy: accelY)
+        }
+    }
+    
+    
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
-        let myLabel = SKLabelNode(fontNamed:"Chalkduster")
-        myLabel.text = "Hello, World!"
-        myLabel.fontSize = 45
-        myLabel.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMidY(self.frame))
         
-        self.addChild(myLabel)
+        // Physics World 
+        physicsWorld.gravity = CGVector(dx: 0, dy: 0)
+        
+        // Set up edges 
+        physicsBody = SKPhysicsBody(edgeLoopFromRect: view.frame)
+        
+        // Make a box
+        let boxSize = CGSize(width: 30, height: 30)
+        box = SKSpriteNode(color: UIColor.redColor(), size: boxSize)
+        addChild(box)
+        box.position.x = view.frame.width / 2
+        box.position.y = view.frame.height / 2
+        
+        box.physicsBody = SKPhysicsBody(rectangleOfSize: boxSize)
+        
+        // Setup core motion 
+        setupCoreMotion()
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-       /* Called when a touch begins */
+        /* Called when a touch begins */
         
-        for touch in touches {
-            let location = touch.locationInNode(self)
-            
-            let sprite = SKSpriteNode(imageNamed:"Spaceship")
-            
-            sprite.xScale = 0.5
-            sprite.yScale = 0.5
-            sprite.position = location
-            
-            let action = SKAction.rotateByAngle(CGFloat(M_PI), duration:1)
-            
-            sprite.runAction(SKAction.repeatActionForever(action))
-            
-            self.addChild(sprite)
-        }
     }
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
+        let vector = CGVector(dx: acceleration.dx * 10, dy: acceleration.dy * 10)
+        box.physicsBody?.applyForce(vector)
     }
 }
