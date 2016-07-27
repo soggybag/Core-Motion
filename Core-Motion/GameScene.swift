@@ -12,6 +12,7 @@ import CoreMotion
 class GameScene: SKScene {
     
     let motionUpdateInterval = 0.2
+    let forceMultiplier: CGFloat = 20
     
     let motionManager = CMMotionManager()
     var acceleration = CGVector()
@@ -63,10 +64,10 @@ class GameScene: SKScene {
         /* Called when a touch begins */
         
     }
-   
+    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
-        let vector = CGVector(dx: acceleration.dx * 10, dy: acceleration.dy * 10)
+        let vector = CGVector(dx: acceleration.dx * forceMultiplier, dy: acceleration.dy * forceMultiplier)
         box.physicsBody?.applyForce(vector)
     }
 }
